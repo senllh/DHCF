@@ -148,7 +148,7 @@ class DropEdge:
 		edge_index = to_undirected(edge_index, data.x.size(0))
 		unif = torch.ones(2, node_num)
 		add_edge_idx = unif.multinomial(permute_num, replacement=True).to(data.x.device)
-		# # 随机抽样
+		# #
 		unif = torch.ones(edge_num)
 		keep_edge_idx = unif.multinomial((edge_num - permute_num), replacement=False)
 		edge_index = torch.cat((edge_index[:, keep_edge_idx], add_edge_idx), dim=1)
@@ -181,7 +181,7 @@ class AddEdge:
 	def __call__(self, data):
 		data.root = torch.FloatTensor(data.x[0])
 		data.root_index = torch.LongTensor([0])
-		# 边
+
 		node_num, _ = data.x.size()
 		_, edge_num = data.edge_index.size()
 		permute_num = int(edge_num * self.tddroprate)
@@ -191,23 +191,10 @@ class AddEdge:
 		edge_index = to_undirected(edge_index, data.x.size(0))
 		unif = torch.ones(2, node_num)
 		add_edge_idx = unif.multinomial(permute_num, replacement=True).to(data.x.device)
-		# # 随机抽样
+
 		unif = torch.ones(edge_num)
 		edge_index = torch.cat((edge_index, add_edge_idx), dim=1)
 		data.edge_index = edge_index
-
-		# 点
-		# if self.tddroprate > 0:
-		# 	mask_num = int(data.num_nodes * self.tddroprate)
-		# 	if mask_num == 0:
-		# 		mask_num = 1
-		# 	unif = torch.ones(data.num_nodes)
-		# 	unif[data.root_index] = 0
-		# 	mask_idx = unif.multinomial(mask_num, replacement=False)
-		# 	shape = data.x.mean(dim=0).shape
-		# 	token = torch.rand(shape[0])
-		# 	#data.x.mean(dim=0)
-		# 	data.x[mask_idx] = token
 		return data
 
 class NodeDrop(torch.nn.Module):
@@ -222,25 +209,20 @@ class NodeDrop(torch.nn.Module):
 		drop_num = int(num_nodes * aug_ratio)
 		keep_num = num_nodes - drop_num
 
-		# 随机选
 		# torch.multinomial(weights, 4, replacement=False)
 		keep_idx = torch.randperm(num_nodes)[:keep_num]
 		# edge_index, _ = subgraph(keep_idx, edge_index)
 		drop_idx = torch.ones(x.shape[0], dtype=bool)
 		drop_idx[keep_idx] = False
 
-		# 按照权重来选
-		# root 不能被dropout
 		drop_idx[0] = False
 
-		x[drop_idx] = 0  # x 对应的特征变成0就 = dropout
+		x[drop_idx] = 0  
 		return x, edge_index
 
 class Adaptive:
 	def __init__(self):
-		"""
-		Data 这里的每个data都是一个小图
-		"""
+
 		self.Nodedrop = NodeDrop()
 
 	# def NodeDrop(self, data, aug_ratio):
@@ -250,18 +232,16 @@ class Adaptive:
 	# 	drop_num = int(num_nodes * aug_ratio)
 	# 	keep_num = num_nodes - drop_num
 	#
-	# 	# 随机选
 	# 	# torch.multinomial(weights, 4, replacement=False)
 	# 	keep_idx = torch.randperm(num_nodes)[:keep_num]
 	# 	# edge_index, _ = subgraph(keep_idx, edge_index)
 	# 	drop_idx = torch.ones(x.shape[0], dtype=bool)
 	# 	drop_idx[keep_idx] = False
 	#
-	# 	# 按照权重来选
-	# 	# root 不能被dropout
+
 	# 	drop_idx[0] = False
 	#
-	# 	x[drop_idx] = 0  # x 对应的特征变成0就 = dropout
+	# 	x[drop_idx] = 0 
 	# 	return x, edge_index
 
 	def EdgePerturb(self, data, aug_ratio):
@@ -292,8 +272,8 @@ class Adaptive:
 	def __call__(self, data):
 		# x, edge_index = copy.copy(data.x), copy.copy(data.edge_index)
 		x, edge_index = self.Nodedrop(data, 0.9)
-		data.root = torch.FloatTensor(data.x[0])  # root 节点的向量表示
-		data.root_index = torch.LongTensor([0])   # root 节点的index索引
+		data.root = torch.FloatTensor(data.x[0])  
+		data.root_index = torch.LongTensor([0])  
 		data.x = x
 		data.edge_index = edge_index
 		return data

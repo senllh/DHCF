@@ -360,7 +360,6 @@ if __name__ == '__main__':
 			if not args.multi_gpu:
 				data = data.to(args.device)
 			out, g, g1, s, s1, cro_loss = model(data)
-			'''  创建多种对比loss  '''
 
 			loss_CrossView = CrossView_loss(g1=g, g2=s, batch=data.batch)
 			loss_IntraGraph = Graph_loss(g1=g, g2=g1, batch=data.batch)
